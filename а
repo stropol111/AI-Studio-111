@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evgeniy AI Studio — Нейрообработка фото, реставрация и видеопрощание</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#0a0a0f;
+      --bg-2:#12121a;
+      --gold:#d4af37;
+      --gold-light:#f4d77a;
+      --neon:#00e5ff;
+      --text:#e8e8ec;
+      --muted:#9a9aa8;
+      --card:#15151f;
+      --border:rgba(212,175,55,0.25);
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+
+    body{
+      font-family:'Montserrat',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+      line-height:1.6;
+    }
+
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(212,175,55,0.08), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(0,229,255,0.06), transparent 40%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .container{
+      max-width:1200px;
+      margin:0 auto;
+      padding:0 24px;
+      position:relative;
+      z-index:1;
+    }
+
+    header{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      z-index:100;
+      background:rgba(10,10,15,0.88);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border);
+    }
+
+    .nav{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:18px 0;
+    }
+
+    .logo{
+      font-family:'Cormorant Garamond',serif;
+      font-size:26px;
+      font-weight:700;
+      background:linear-gradient(135deg,var(--gold),var(--gold-light));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      letter-spacing:2px;
+    }
+
+    .logo span{
+      color:var(--neon);
+      -webkit-text-fill-color:var(--neon);
+    }
+
+    .nav-links{
+      display:flex;
+      gap:22px;
+      list-style:none;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .nav-links a{
+      color:var(--text);
+      text-decoration:none;
+      font-size:12px;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      transition:color .3s;
+      cursor:pointer;
+    }
+
+    .nav-links a:hover{
+      color:var(--gold);
+    }
+
+    .burger{
+      display:none;
+      background:none;
+      border:none;
+      color:var(--gold);
+      font-size:26px;
+      cursor:pointer;
+    }
+
+    .btn{
+      display:inline-block;
+      padding:14px 34px;
+      background:linear-gradient(135deg,var(--gold) 0%,var(--gold-light) 100%);
+      color:#0a0a0f;
+      font-weight:700;
+      text-decoration:none;
+      border:none;
+      cursor:pointer;
+      font-size:14px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      border-radius:2px;
+      transition:all .4s;
+      font-family:inherit;
+      box-shadow:0 0 20px rgba(212,175,55,0.3);
+    }
+
+    .btn:hover{
+      box-shadow:0 0 35px rgba(212,175,55,0.7),0 0 60px rgba(0,229,255,0.18);
+      transform:translateY(-2px);
+    }
+
+    .btn-outline{
+      background:transparent;
+      color:var(--gold);
+      border:1px solid var(--gold);
+      box-shadow:none;
+    }
+
+    .btn-outline:hover{
+      background:var(--gold);
+      color:#0a0a0f;
+    }
+
+    .hero{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      padding:120px 0 60px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:60px;
+      align-items:center;
+    }
+
+    .hero-tag{
+      display:inline-block;
+      padding:6px 16px;
+      border:1px solid var(--gold);
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:3px;
+      text-transform:uppercase;
+      margin-bottom:24px;
+      border-radius:30px;
+    }
+
+    .hero h1{
+      font-family:'Cormorant Garamond',serif;
+      font-size:62px;
+      line-height:1.1;
+      font-weight:700;
+      margin-bottom:24px;
+    }
+
+    .hero h1 .accent{
+      background:linear-gradient(135deg,var(--gold),var(--gold-light));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero p{
+      color:var(--muted);
+      font-size:17px;
+      margin-bottom:36px;
+      max-width:560px;
+    }
+
+    .hero-buttons{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .hero-image{
+      position:relative;
+      width:100%;
+      max-width:420px;
+      margin:0 auto;
+      aspect-ratio:9/16;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      box-shadow:0 0 80px rgba(212,175,55,0.15);
+    }
+
+    .hero-image img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center top;
+    }
+
+    .hero-image::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(45deg,transparent 60%,rgba(212,175,55,0.15));
+      pointer-events:none;
+    }
+
+    section{
+      padding:100px 0;
+      position:relative;
+    }
+
+    .section-tag{
+      text-align:center;
+      color:var(--neon);
+      font-size:12px;
+      letter-spacing:4px;
+      text-transform:uppercase;
+      margin-bottom:12px;
+    }
+
+    .section-title{
+      font-family:'Cormorant Garamond',serif;
+      font-size:48px;
+      text-align:center;
+      margin-bottom:16px;
+      font-weight:700;
+    }
+
+    .section-title .accent{
+      background:linear-gradient(135deg,var(--gold),var(--gold-light));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .section-sub{
+      text-align:center;
+      color:var(--muted);
+      margin-bottom:60px;
+      max-width:820px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+
+    .compare-wrap{
+      max-width:736px;
+      margin:0 auto;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      box-shadow:0 0 60px rgba(212,175,55,0.2);
+      background:#000;
+    }
+
+    .compare{
+      position:relative;
+      width:100%;
+      aspect-ratio:736 / 1104;
+      user-select:none;
+      overflow:hidden;
+      cursor:ew-resize;
+      background:#000;
+    }
+
+    .compare img{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      object-position:center center;
+      display:block;
+      pointer-events:none;
+      background:#000;
+    }
+
+    .compare .img-after{
+      clip-path:inset(0 0 0 50%);
+    }
+
+    .compare .label{
+      position:absolute;
+      top:20px;
+      background:rgba(10,10,15,0.8);
+      backdrop-filter:blur(8px);
+      color:var(--gold);
+      padding:6px 16px;
+      font-size:12px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      border:1px solid var(--gold);
+      border-radius:2px;
+      pointer-events:none;
+      z-index:3;
+    }
+
+    .compare .label-before{left:20px}
+    .compare .label-after{
+      right:20px;
+      color:var(--neon);
+      border-color:var(--neon);
+    }
+
+    .slider-line{
+      position:absolute;
+      top:0;
+      bottom:0;
+      width:3px;
+      background:linear-gradient(var(--gold),var(--neon));
+      left:50%;
+      transform:translateX(-50%);
+      pointer-events:none;
+      box-shadow:0 0 20px var(--gold);
+      z-index:3;
+    }
+
+    .slider-handle{
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--gold),var(--gold-light));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+      box-shadow:0 0 30px rgba(212,175,55,0.7);
+      font-size:18px;
+      color:#0a0a0f;
+      font-weight:bold;
+      z-index:3;
+    }
+
+    .compare-buttons{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      margin-top:30px;
+      flex-wrap:wrap;
+    }
+
+    .compare-btn{
+      padding:10px 22px;
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--text);
+      cursor:pointer;
+      font-size:13px;
+      letter-spacing:1px;
+      border-radius:2px;
+      transition:all .3s;
+      font-family:inherit;
+    }
+
+    .compare-btn:hover,
+    .compare-btn.active{
+      border-color:var(--gold);
+      color:var(--gold);
+      background:rgba(212,175,55,0.05);
+    }
+
+    .services{
+      background:var(--bg-2);
+    }
+
+    .services-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:24px;
+      align-items:start;
+    }
+
+    .service-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      padding:36px 28px;
+      border-radius:6px;
+      transition:all .4s;
+      position:relative;
+      overflow:hidden;
+      height:100%;
+    }
+
+    .service-card::before{
+      content:'';
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      height:2px;
+      background:linear-gradient(90deg,var(--gold),var(--neon));
+      transform:scaleX(0);
+      transform-origin:left;
+      transition:.4s;
+    }
+
+    .service-card:hover{
+      transform:translateY(-6px);
+      border-color:var(--gold);
+      box-shadow:0 20px 50px rgba(212,175,55,0.15);
+    }
+
+    .service-card:hover::before{
+      transform:scaleX(1);
+    }
+
+    .service-icon{
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(0,229,255,0.1));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:28px;
+      margin-bottom:20px;
+      border:1px solid var(--border);
+    }
+
+    .service-card h3{
+      font-family:'Cormorant Garamond',serif;
+      font-size:24px;
+      margin-bottom:12px;
+      color:var(--gold);
+    }
+
+    .service-card p{
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:20px;
+    }
+
+    .service-price{
+      color:var(--neon);
+      font-size:18px;
+      font-weight:500;
+      margin-bottom:20px;
+      display:block;
+    }
+
+    .video-feature{
+      background:
+        linear-gradient(135deg, rgba(212,175,55,0.08), rgba(0,229,255,0.05)),
+        #0f0f16;
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+    }
+
+    .video-feature-box{
+      border:1px solid rgba(212,175,55,0.22);
+      border-radius:16px;
+      overflow:hidden;
+      background:linear-gradient(180deg, rgba(21,21,31,0.95), rgba(10,10,15,0.98));
+      box-shadow:0 0 60px rgba(212,175,55,0.12), 0 0 100px rgba(0,229,255,0.04);
+      position:relative;
+    }
+
+    .video-feature-inner{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:1fr 1.15fr;
+      gap:40px;
+      align-items:center;
+      padding:50px;
+    }
+
+    .video-badge{
+      display:inline-block;
+      padding:7px 16px;
+      border:1px solid var(--gold);
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:3px;
+      text-transform:uppercase;
+      border-radius:30px;
+      margin-bottom:20px;
+    }
+
+    .video-title{
+      font-family:'Cormorant Garamond',serif;
+      font-size:52px;
+      line-height:1.05;
+      margin-bottom:20px;
+      font-weight:700;
+    }
+
+    .video-title .accent{
+      background:linear-gradient(135deg,var(--gold),var(--gold-light));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .video-text{
+      color:var(--muted);
+      font-size:16px;
+      margin-bottom:28px;
+      max-width:540px;
+    }
+
+    .video-points{
+      display:grid;
+      gap:12px;
+      margin-bottom:32px;
+    }
+
+    .video-point{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      color:var(--text);
+      font-size:14px;
+    }
+
+    .video-point span{
+      color:var(--neon);
+      font-weight:700;
+      min-width:20px;
+    }
+
+    .video-actions{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .video-widget-wrap{
+      background:#0b0b12;
+      border:1px solid rgba(212,175,55,0.18);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:inset 0 0 30px rgba(255,255,255,0.02);
+      min-height:420px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .video-widget-wrap > div{
+      width:100%;
+      display:flex;
+      justify-content:center;
+    }
+
+    .restoration-section,
+    .virtual-session-section{
+      background:var(--bg-2);
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+    }
+
+    .restoration-grid,
+    .virtual-session-grid,
+    .gallery-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
+    }
+
+    .restoration-item,
+    .virtual-session-item,
+    .gallery-item{
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      background:#000;
+      cursor:pointer;
+      transition:.35s;
+      position:relative;
+    }
+
+    .restoration-item:hover,
+    .virtual-session-item:hover,
+    .gallery-item:hover{
+      border-color:var(--gold);
+      box-shadow:0 0 30px rgba(212,175,55,0.25);
+      transform:translateY(-4px);
+    }
+
+    .restoration-item img,
+    .virtual-session-item img,
+    .gallery-item img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+      transition:.45s;
+    }
+
+    .restoration-item:hover img,
+    .virtual-session-item:hover img,
+    .gallery-item:hover img{
+      transform:scale(1.03);
+    }
+
+    .reviews{
+      background:var(--bg-2);
+    }
+
+    .reviews-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:24px;
+    }
+
+    .review-card{
+      background:var(--card);
+      padding:30px;
+      border-radius:6px;
+      border:1px solid var(--border);
+      position:relative;
+      transition:.3s;
+    }
+
+    .review-card:hover{
+      border-color:var(--gold);
+      transform:translateY(-4px);
+    }
+
+    .review-card::before{
+      content:'"';
+      position:absolute;
+      top:-10px;
+      right:20px;
+      font-family:'Cormorant Garamond',serif;
+      font-size:90px;
+      color:var(--gold);
+      opacity:.3;
+      line-height:1;
+    }
+
+    .review-stars{
+      color:var(--gold);
+      margin-bottom:14px;
+      letter-spacing:3px;
+    }
+
+    .review-text{
+      color:var(--text);
+      font-size:14px;
+      margin-bottom:24px;
+      font-style:italic;
+    }
+
+    .review-author{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .review-avatar{
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      border:2px solid var(--gold);
+      object-fit:cover;
+      box-shadow:0 0 15px rgba(212,175,55,0.4);
+    }
+
+    .review-name{
+      font-weight:500;
+      color:var(--gold-light);
+      font-size:15px;
+    }
+
+    .review-role{
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:1px;
+    }
+
+    .cta-section{
+      background:linear-gradient(135deg,rgba(212,175,55,0.05),rgba(0,229,255,0.04));
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+      text-align:center;
+    }
+
+    .cta-section p{
+      color:var(--muted);
+      max-width:700px;
+      margin:0 auto 36px;
+    }
+
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      z-index:300;
+      background:rgba(5,5,10,0.85);
+      backdrop-filter:blur(10px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      opacity:0;
+      transition:opacity .3s;
+    }
+
+    .modal-overlay.active{
+      display:flex;
+      opacity:1;
+    }
+
+    .modal{
+      background:var(--card);
+      border:1px solid var(--gold);
+      border-radius:10px;
+      padding:40px 32px;
+      max-width:460px;
+      width:100%;
+      box-shadow:0 0 80px rgba(212,175,55,0.4),0 0 40px rgba(0,229,255,0.15);
+      position:relative;
+      transform:scale(.9);
+      transition:transform .3s;
+      text-align:center;
+    }
+
+    .modal-overlay.active .modal{
+      transform:scale(1);
+    }
+
+    .modal-close{
+      position:absolute;
+      top:12px;
+      right:16px;
+      background:none;
+      border:none;
+      color:var(--muted);
+      font-size:28px;
+      cursor:pointer;
+    }
+
+    .modal-close:hover{
+      color:var(--gold);
+    }
+
+    .modal-icon{
+      width:70px;
+      height:70px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--gold),var(--gold-light));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 18px;
+      font-size:32px;
+      box-shadow:0 0 30px rgba(212,175,55,0.5);
+    }
+
+    .modal h3{
+      font-family:'Cormorant Garamond',serif;
+      font-size:30px;
+      margin-bottom:10px;
+      color:var(--gold);
+    }
+
+    .modal p{
+      color:var(--muted);
+      margin-bottom:28px;
+      font-size:14px;
+    }
+
+    .contact-links{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .contact-link{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:14px 20px;
+      border-radius:6px;
+      text-decoration:none;
+      font-weight:500;
+      font-size:15px;
+      transition:all .3s;
+      border:1px solid transparent;
+      color:var(--text);
+    }
+
+    .contact-link .ico{
+      width:42px;
+      height:42px;
+      border-radius:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      font-size:14px;
+      flex-shrink:0;
+      color:#fff;
+    }
+
+    .contact-link .info{
+      text-align:left;
+      flex:1;
+    }
+
+    .contact-link .title{
+      font-size:15px;
+      font-weight:600;
+      display:block;
+    }
+
+    .contact-link .sub{
+      font-size:12px;
+      opacity:.7;
+      font-weight:400;
+    }
+
+    .contact-max{
+      background:rgba(0,229,255,0.08);
+      border-color:rgba(0,229,255,0.3);
+    }
+
+    .contact-max .ico{
+      background:linear-gradient(135deg,#00e5ff,#0088ff);
+    }
+
+    .contact-vk{
+      background:rgba(82,136,193,0.08);
+      border-color:rgba(82,136,193,0.35);
+    }
+
+    .contact-vk .ico{
+      background:linear-gradient(135deg,#5181b8,#2b587a);
+    }
+
+    .contact-ok{
+      background:rgba(238,128,30,0.08);
+      border-color:rgba(238,128,30,0.35);
+    }
+
+    .contact-ok .ico{
+      background:linear-gradient(135deg,#ee801e,#c96600);
+    }
+
+    .contact-mail{
+      background:rgba(212,175,55,0.08);
+      border-color:rgba(212,175,55,0.35);
+    }
+
+    .contact-mail .ico{
+      background:linear-gradient(135deg,#d4af37,#f4d77a);
+      color:#0a0a0f;
+    }
+
+    .lightbox-overlay{
+      position:fixed;
+      inset:0;
+      z-index:400;
+      background:rgba(0,0,0,0.92);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .lightbox-overlay.active{
+      display:flex;
+    }
+
+    .lightbox-content{
+      position:relative;
+      width:min(100%, 1280px);
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-items:center;
+    }
+
+    .lightbox-image-wrap{
+      width:100%;
+      max-height:82vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#000;
+      border:1px solid var(--border);
+      border-radius:10px;
+      overflow:hidden;
+      box-shadow:0 0 50px rgba(212,175,55,0.2);
+    }
+
+    .lightbox-image{
+      width:100%;
+      max-height:82vh;
+      object-fit:contain;
+      display:block;
+      background:#000;
+    }
+
+    .lightbox-close,
+    .lightbox-prev,
+    .lightbox-next{
+      position:absolute;
+      border:none;
+      cursor:pointer;
+      color:#0a0a0f;
+      background:linear-gradient(135deg,var(--gold),var(--gold-light));
+      box-shadow:0 0 25px rgba(212,175,55,0.4);
+    }
+
+    .lightbox-close{
+      top:-10px;
+      right:0;
+      width:44px;
+      height:44px;
+      border-radius:50%;
+      font-size:24px;
+      z-index:3;
+    }
+
+    .lightbox-prev,
+    .lightbox-next{
+      top:50%;
+      transform:translateY(-50%);
+      width:54px;
+      height:54px;
+      border-radius:50%;
+      font-size:24px;
+      z-index:3;
+    }
+
+    .lightbox-prev{left:-10px}
+    .lightbox-next{right:-10px}
+
+    .lightbox-thumbs{
+      width:100%;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(90px,1fr));
+      gap:10px;
+    }
+
+    .lightbox-thumb{
+      border:1px solid var(--border);
+      border-radius:6px;
+      overflow:hidden;
+      cursor:pointer;
+      background:#000;
+      opacity:.7;
+      transition:.3s;
+    }
+
+    .lightbox-thumb.active,
+    .lightbox-thumb:hover{
+      opacity:1;
+      border-color:var(--gold);
+      box-shadow:0 0 15px rgba(212,175,55,0.25);
+    }
+
+    .lightbox-thumb img{
+      width:100%;
+      height:120px;
+      object-fit:cover;
+      object-position:center center;
+      display:block;
+    }
+
+    footer{
+      background:#070709;
+      padding:50px 0 30px;
+      border-top:1px solid var(--border);
+    }
+
+    .footer-grid{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr;
+      gap:40px;
+      margin-bottom:30px;
+    }
+
+    .footer-grid h4{
+      color:var(--gold);
+      font-family:'Cormorant Garamond',serif;
+      font-size:20px;
+      margin-bottom:16px;
+    }
+
+    .footer-grid p,
+    .footer-grid a{
+      color:var(--muted);
+      font-size:14px;
+      text-decoration:none;
+      display:block;
+      margin-bottom:8px;
+      transition:.3s;
+      cursor:pointer;
+    }
+
+    .footer-grid a:hover{
+      color:var(--gold);
+    }
+
+    .footer-bottom{
+      text-align:center;
+      padding-top:24px;
+      border-top:1px solid var(--border);
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .socials{
+      display:flex;
+      gap:12px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+
+    .social-link{
+      width:44px;
+      height:44px;
+      border-radius:50%;
+      border:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--gold);
+      text-decoration:none;
+      transition:.3s;
+      font-weight:700;
+      font-size:13px;
+    }
+
+    .social-link:hover{
+      background:var(--gold);
+      color:#0a0a0f;
+      box-shadow:0 0 15px rgba(212,175,55,0.5);
+      transform:translateY(-3px);
+    }
+
+    @media(max-width:980px){
+      .hero h1{font-size:42px}
+      .hero-grid,
+      .footer-grid,
+      .video-feature-inner{
+        grid-template-columns:1fr;
+      }
+
+      .section-title{font-size:34px}
+      .video-title{font-size:38px}
+      .video-feature-inner{padding:28px}
+
+      .nav-links{
+        display:none;
+        position:absolute;
+        top:100%;
+        left:0;
+        right:0;
+        background:var(--bg-2);
+        flex-direction:column;
+        padding:20px;
+        border-bottom:1px solid var(--border);
+      }
+
+      .nav-links.open{
+        display:flex;
+      }
+
+      .burger{
+        display:block;
+      }
+
+      .lightbox-prev{left:10px}
+      .lightbox-next{right:10px}
+      .lightbox-close{top:10px;right:10px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <div class="logo">EVGENIY <span>AI</span></div>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#hero">Главная</a></li>
+      <li><a href="#compare-section">До / После</a></li>
+      <li><a href="#services">Услуги</a></li>
+      <li><a href="#video-section">Видеопрощание</a></li>
+      <li><a href="#restoration">Реставрация</a></li>
+      <li><a href="#virtual-session">Фотосессия</a></li>
+      <li><a href="#gallery">Работы</a></li>
+      <li><a href="#reviews">Отзывы</a></li>
+      <li><a onclick="openModal()">Заказать</a></li>
+    </ul>
+
+    <button class="burger" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+  </div>
+</header>
+
+<section class="hero" id="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="hero-tag">AI Studio • Нейросети</span>
+      <h1>Создаю <span class="accent">бережные</span> визуальные образы и видеопрощание</h1>
+      <p>Профессиональная нейрообработка фото, реставрация старых снимков, фотосессии без камеры и создание трогательных видеороликов прощания с близкими. По фотографии создаю короткое видео, в котором образ человека прощается и уходит в небеса по лестнице.</p>
+      <div class="hero-buttons">
+        <button class="btn" onclick="openModal()">Заказать работу</button>
+        <a href="#video-section" class="btn btn-outline">Смотреть видеоблок</a>
+      </div>
+    </div>
+
+    <div class="hero-image">
+      <img src="https://sun9-3.userapi.com/s/v1/ig2/I2okxsb7uOMlE1tU1E1QfX0ZUbfMo9zGsMe63CBNDqlk0lF_MTqrwBldzNe_LQr6Au0Wwj3sh08UdsnmW6_OqKBk.jpg?quality=95&as=32x57,48x85,72x128,108x192,160x284,240x427,360x640,480x853,540x960,640x1138,720x1280,1080x1920,1280x2276,1440x2560&from=bu&cs=1440x0" alt="Evgeniy AI Studio" />
+    </div>
+  </div>
+</section>
+
+<section id="compare-section">
+  <div class="container">
+    <div class="section-tag">Результат</div>
+    <h2 class="section-title">До и <span class="accent">После</span></h2>
+    <p class="section-sub">Передвигайте полоску мышью или пальцем, чтобы увидеть трансформацию</p>
+
+    <div class="compare-wrap">
+      <div class="compare" id="compare">
+        <img class="img-before" src="https://sun9-24.userapi.com/s/v1/ig2/veDS7nFXYeQp8ZEko8cg9SFO3x-PX-AAo2b9xZuG-0JnKcRANH915pdMwtOnGVv0yo8D_pu-6Kjl1BCaKr_fMSIK.jpg?quality=95&as=32x48,48x72,72x108,108x162,160x240,240x360,360x540,480x720,540x810,640x960,720x1080,736x1104&from=bu&u=WvG0UR4svJsNWxkMqLYQ4jnW_WVUvzdYGGMLWceBbNo&cs=736x0" alt="До" />
+        <img class="img-after" src="https://sun9-70.userapi.com/s/v1/ig2/tXcZuroHIBneJvX1VWurhlBt52yTu87Ett8fzP7KOjuUWGVb_TPBlSvWspdSztLhWDrxfPU9ZpInzVD27f_du9ez.jpg?quality=95&as=32x48,48x72,72x108,108x162,160x240,240x360,360x540,480x720,540x810,640x960,720x1080,736x1104&from=bu&u=E9jac_zTC0ehXunrKleTNtuo67koQnvUoyHjZBbLPO8&cs=736x0" alt="После" />
+        <span class="label label-before">До</span>
+        <span class="label label-after">После</span>
+        <div class="slider-line"></div>
+        <div class="slider-handle">⇆</div>
+      </div>
+    </div>
+
+    <div class="compare-buttons">
+      <button class="compare-btn active" onclick="loadCompare(this,'https://sun9-24.userapi.com/s/v1/ig2/veDS7nFXYeQp8ZEko8cg9SFO3x-PX-AAo2b9xZuG-0JnKcRANH915pdMwtOnGVv0yo8D_pu-6Kjl1BCaKr_fMSIK.jpg?quality=95&as=32x48,48x72,72x108,108x162,160x240,240x360,360x540,480x720,540x810,640x960,720x1080,736x1104&from=bu&u=WvG0UR4svJsNWxkMqLYQ4jnW_WVUvzdYGGMLWceBbNo&cs=736x0','https://sun9-70.userapi.com/s/v1/ig2/tXcZuroHIBneJvX1VWurhlBt52yTu87Ett8fzP7KOjuUWGVb_TPBlSvWspdSztLhWDrxfPU9ZpInzVD27f_du9ez.jpg?quality=95&as=32x48,48x72,72x108,108x162,160x240,240x360,360x540,480x720,540x810,640x960,720x1080,736x1104&from=bu&u=E9jac_zTC0ehXunrKleTNtuo67koQnvUoyHjZBbLPO8&cs=736x0')"> Пример</button>
+    </div>
+
+    <div style="text-align:center;margin-top:50px">
+      <button class="btn" onclick="openModal()">Заказать обработку</button>
+    </div>
+  </div>
+</section>
+
+<section class="services" id="services">
+  <div class="container">
+    <div class="section-tag">Услуги</div>
+    <h2 class="section-title">Что я <span class="accent">делаю</span></h2>
+    <p class="section-sub">Нейрообработка фото, реставрация старых фотографий, фотосессии без камеры, художественные образы и создание особенных видеороликов прощания по фотографии близкого человека</p>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🎨</div>
+        <h3>Нейрообработка фото</h3>
+        <p>Профессиональная ретушь, улучшение качества, превращение обычных фото в выразительные художественные образы.</p>
+        <span class="service-price">от 1000 ₽</span>
+        <button class="btn btn-outline" onclick="openPhotoGallery(0)">Смотреть фото</button>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🕊️</div>
+        <h3>Видеопрощание</h3>
+        <p>Создание короткого трогательного видеоролика прощания по фотографии близкого человека.</p>
+        <span class="service-price">индивидуально</span>
+        <button class="btn btn-outline" onclick="document.getElementById('video-section').scrollIntoView({behavior:'smooth'})">Подробнее</button>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">🖼️</div>
+        <h3>Реставрация старых фотографий</h3>
+        <p>Восстанавливаю старые, поврежденные и выцветшие фотографии, возвращая им четкость и аккуратный вид.</p>
+        <span class="service-price">индивидуально</span>
+        <button class="btn btn-outline" onclick="openRestorationGallery(0)">Смотреть примеры</button>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">👤</div>
+        <h3>Смена образов</h3>
+        <p>Создание уникальных образов из одного фото — стили, эпохи, художественные сцены без съёмок.</p>
+        <span class="service-price">от 1 500 ₽</span>
+        <button class="btn btn-outline" onclick="openModal()">Заказать</button>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">✨</div>
+        <h3>AI Аватары</h3>
+        <p>Стилизованные аватары для соцсетей и личного бренда в нужной вам эстетике.</p>
+        <span class="service-price">от 1 200 ₽</span>
+        <button class="btn btn-outline" onclick="openModal()">Заказать</button>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">📸</div>
+        <h3>Фотосессия без камеры</h3>
+        <p>Полноценная стилизованная фотосессия, созданная нейросетью. Нажмите, чтобы открыть примеры в полном размере.</p>
+        <span class="service-price">от 1 000 ₽</span>
+        <button class="btn btn-outline" onclick="openVirtualSessionGallery(0)">Смотреть примеры</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="video-feature" id="video-section">
+  <div class="container">
+    <div class="section-tag">Особая услуга</div>
+    <h2 class="section-title">Прощание с <span class="accent">близкими</span></h2>
+    <p class="section-sub">Бережный видеоролик памяти и прощания. Вы присылаете фотографию близкого человека, а я создаю короткое трогательное видео, в котором он прощается и уходит в небеса по лестнице.</p>
+
+    <div class="video-feature-box">
+      <div class="video-feature-inner">
+        <div class="video-copy">
+          <span class="video-badge">Память • Прощание • Бережная работа</span>
+          <h3 class="video-title">Трогательное <span class="accent">видеопрощание</span> по одной фотографии</h3>
+          <p class="video-text">
+            Эта услуга создана для тех, кто хочет сохранить светлую память о близком человеке в особом формате. Вы присылаете мне фотографию, и на её основе я создаю короткий видеоролик, где человек прощается и уходит в небеса по лестнице. Работа выполняется деликатно, с уважением и вниманием к каждой детали.
+          </p>
+
+          <div class="video-points">
+            <div class="video-point"><span>01</span> Вы присылаете фотографию близкого человека</div>
+            <div class="video-point"><span>02</span> Я создаю короткое видео прощания в бережной визуальной подаче</div>
+            <div class="video-point"><span>03</span> В финале человек уходит в небеса по лестнице</div>
+          </div>
+
+          <div class="video-actions">
+            <button class="btn" onclick="openModal()">Заказать видеопрощание</button>
+            <a href="#reviews" class="btn btn-outline">Смотреть отзывы</a>
+          </div>
+        </div>
+
+        <div class="video-widget-wrap">
+          <div id="vk_post_554120988_3169"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="restoration-section" id="restoration">
+  <div class="container">
+    <div class="section-tag">Реставрация</div>
+    <h2 class="section-title">Реставрация <span class="accent">старых фотографий</span></h2>
+    <p class="section-sub">Восстанавливаю старые и поврежденные снимки: улучшаю четкость, убираю дефекты, возвращаю фотографиям аккуратный и достойный вид. Нажмите на любое фото, чтобы открыть его полностью в большом размере.</p>
+
+    <div class="restoration-grid">
+      <div class="restoration-item" onclick="openRestorationGallery(0)">
+        <img src="https://sun9-21.userapi.com/s/v1/ig2/5BsOckwVCVDjR9MnSWoWJp2IVXLrYFFwObHX32sh7HuFGrjLnyytOmjZEY6Ed2TgipLzlUth-yggGP4_GdBrXeev.jpg?quality=95&as=32x18,48x27,72x40,108x60,160x89,240x134,360x201,480x268,540x301,640x357,720x402,1080x603,1280x714,1376x768&from=bu&cs=1376x0" alt="Реставрация 1" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(1)">
+        <img src="https://sun9-49.userapi.com/s/v1/ig2/doYIkGBBtkZXj4xsVF6Uagxf3sTtvAl18IThNAJjvTwaXGplfFaDB1ibkBhft4brlO7YcTDKt6iGBYGUP1njap15.jpg?quality=95&as=32x21,48x31,72x47,108x70,160x104,240x156,360x234,480x312,540x351,640x416,720x468,1080x702,1280x832,1440x936,2429x1579&from=bu&cs=2429x0" alt="Реставрация 2" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(2)">
+        <img src="https://sun9-19.userapi.com/s/v1/ig2/ehz_lDBV8wyrj8B3I6lCUPG_KiS94VNZtSv-5-olNjdrpvuBCqABe6zuOUjFW-b76u8u4cAR1xv3EEKidcKNkPnH.jpg?quality=95&as=32x23,48x34,72x51,108x76,160x113,240x169,360x254,480x339,540x381,640x451,720x508,1080x762,1280x903,1440x1016,2382x1680&from=bu&cs=2382x0" alt="Реставрация 3" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(3)">
+        <img src="https://sun9-22.userapi.com/s/v1/ig2/nHY7rgzAkwZ5QanMwrlZtW_0YmrHSl_O1-Ock1cuTNWoO-LA_FEH6yl5_TcF7gEOeUshZLDdDFVKOXFMd4ejVtoD.jpg?quality=95&as=32x21,48x32,72x48,108x72,160x106,240x159,360x238,480x318,540x358,640x424,720x477,1080x715,1280x848,1440x954,2512x1664&from=bu&cs=2512x0" alt="Реставрация 4" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(4)">
+        <img src="https://sun9-62.userapi.com/s/v1/ig2/EwNs-LNxSIeYHgt5CFBVtT9XOObDuAK_1hlqwcc_ufovA1U2jbcsiY26Xwvw-niN838ylsUSsZnm3_yn9r-SufxX.jpg?quality=95&as=32x22,48x33,72x50,108x75,160x110,240x166,360x248,480x331,540x373,640x442,720x497,1080x745,1280x883,1440x994,2458x1696&from=bu&cs=2458x0" alt="Реставрация 5" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(5)">
+        <img src="https://sun9-45.userapi.com/s/v1/ig2/kFMnTgVwqMzHt-Z4sgVWuOwx4Rl79rt-X-Yi1d_KjXq_Zrkbe4624uP1jnpxJwaDxZRutNsYRop1IxKyzzHNE8Gx.jpg?quality=95&as=32x22,48x34,72x50,108x76,160x112,240x168,360x252,480x336,540x378,640x448,720x504,1080x756,1280x896,1440x1008,2446x1712&from=bu&cs=2446x0" alt="Реставрация 6" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(6)">
+        <img src="https://sun9-51.userapi.com/s/v1/ig2/X-N3f9zjkOtK-Z5d_57exUtA3-_mXOZL8bs77ktb6BLpOUxcxJd_70B_O-paCxRj8QPSY1TYAKKRTECXCfOff0PA.jpg?quality=95&as=32x21,48x31,72x47,108x70,160x104,240x156,360x235,480x313,540x352,640x417,720x469,1080x704,1280x834,1440x939,2528x1648&from=bu&cs=2528x0" alt="Реставрация 7" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(7)">
+        <img src="https://sun9-49.userapi.com/s/v1/ig2/ytQI0G9FDl3LFXF80eXExh7Fm3KgpgJ3vzRIKPV0pThUTm6F1SlnnsjVcn3fJ_AjAunBSWu69Ck8okZLeDomqBPU.jpg?quality=95&as=32x19,48x29,72x44,108x66,160x97,240x146,360x218,480x291,540x328,640x388,720x437,1080x655,1280x776,1440x874,2560x1553&from=bu&cs=2560x0" alt="Реставрация 8" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(8)">
+        <img src="https://sun9-65.userapi.com/s/v1/ig2/XaYmYsWNyIHVmhsl5XwhZIWqrKF5ZeCqEBxh4Un16NAGLQganD0GjkjnsG-5tEtEm5kItuzTZSLp2C7V1hzZy5ku.jpg?quality=95&as=32x21,48x32,72x48,108x72,160x107,240x161,360x241,480x322,540x362,640x429,720x482,1080x723,1280x857,1440x965,2496x1672&from=bu&cs=2496x0" alt="Реставрация 9" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(9)">
+        <img src="https://sun9-81.userapi.com/s/v1/ig2/BWpwsh8xoc3LsGsmT0Y_nE94fTRfKSi_KGZt1X42MCHBCVwt_1aonLer0neFmHy1u-i139F6pAcCwX7rkEvqCH7-.jpg?quality=95&as=32x16,48x24,72x36,108x55,160x81,240x121,360x182,480x243,540x273,640x324,720x364,1080x546,1280x647,1440x728,2560x1295&from=bu&cs=2560x0" alt="Реставрация 10" />
+      </div>
+      <div class="restoration-item" onclick="openRestorationGallery(10)">
+        <img src="https://sun9-46.userapi.com/s/v1/ig2/KaOmvY3RcPNPdSOzPWGAAEiJj1QSZ1ml8dKTdgISbpBh5s2NatM-SEqQBclBaD3JSwfXbCk7Y60m0D-ZJg4-MaHs.jpg?quality=95&as=32x22,48x34,72x50,108x76,160x112,240x168,360x252,480x336,540x378,640x448,720x504,1080x755,1280x895,1440x1007,2448x1712&from=bu&cs=2448x0" alt="Реставрация 11" />
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:50px">
+      <button class="btn" onclick="openRestorationGallery(0)">Открыть все фото реставрации</button>
+    </div>
+  </div>
+</section>
+
+<section class="virtual-session-section" id="virtual-session">
+  <div class="container">
+    <div class="section-tag">Фотосессия</div>
+    <h2 class="section-title">Фотосессия <span class="accent">без камеры</span></h2>
+    <p class="section-sub">Стилизованные образы и полноценные визуальные сцены, созданные нейросетью. Нажмите на любое фото, чтобы открыть его полностью в большом размере.</p>
+
+    <div class="virtual-session-grid">
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(0)">
+        <img src="https://sun9-19.userapi.com/s/v1/ig2/IojbubouVb1sXhrTl4MTD7EuKYzp91TeCNIdFq8jm_aTXHpFMJBhk02Ozbf95iazc_gZSjPD_b-4IGBQCAHwCUC9.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0" alt="Фотосессия 1" />
+      </div>
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(1)">
+        <img src="https://sun9-74.userapi.com/s/v1/ig2/B42T5I8YigNOC5feBTVUBFDMHqs_wOms6wZRgZgfAwCMNevIFspbPHAo-1ayPaJveeQlv4W8wgCy7pyBFcbbRMlj.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0" alt="Фотосессия 2" />
+      </div>
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(2)">
+        <img src="https://sun9-66.userapi.com/s/v1/ig2/O-O2M9rnXoE7lxZFDqOd-VbAqj0cIKvuAIV-4Jfp6KP-g50B2Dv09GuTRBAwxiL4DV6nOQH7VgZR2yljPyglSBxq.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0" alt="Фотосессия 3" />
+      </div>
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(3)">
+        <img src="https://sun9-39.userapi.com/s/v1/ig2/NUdXoSE88_dXqwrCCaL10FdxUYCd5_cZXpUyFBOxwBNtInJLYAIBGASAyHawZACToJtERu4BqnbVONijcCrHWRva.jpg?quality=95&crop=0,0,1280,950&as=32x24,48x36,72x53,108x80,160x119,240x178,360x267,480x356,540x401,640x475,720x534,1080x802,1280x950&from=bu&cs=1280x0" alt="Фотосессия 4" />
+      </div>
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(4)">
+        <img src="https://sun9-58.userapi.com/s/v1/ig2/wvw4m_JOcvqTre1nLvgp5xL4B-SzwFZvS_NbdGvYiyeabnZ9lWon2WyWyycblItIVu_YdIk5aUZhv1LRDU-svvJJ.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0" alt="Фотосессия 5" />
+      </div>
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(5)">
+        <img src="https://sun9-10.userapi.com/s/v1/ig2/2A3WkBdHE7PFAXpORfDF6JJ6qw6uMOXevgPdGYvSbs50YloWOf9QhpTrKN20oPeRoVJGDrUA_AwYHzPfULlcPDMo.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0" alt="Фотосессия 6" />
+      </div>
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(6)">
+        <img src="https://sun9-82.userapi.com/s/v1/ig2/PTk4_kme-maweVs5G04p_8iB7vkjGhpbkqsy_Wzx1E6tI8_nuFEMVdZo4XXA7PTpc6p8NX83x3W7yUqhikHpnAjE.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0" alt="Фотосессия 7" />
+      </div>
+      <div class="virtual-session-item" onclick="openVirtualSessionGallery(7)">
+        <img src="https://sun9-79.userapi.com/s/v1/ig2/tCIa8AIqtx28621ptm00t_0Xkf9iOuKo4nMNvHCviRa_bO4dCQQRtJV-JyB0CkqvCs3gVg7cMtootu10wYUW7Ws1.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0" alt="Фотосессия 8" />
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:50px">
+      <button class="btn" onclick="openVirtualSessionGallery(0)">Открыть все фото фотосессии</button>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="container">
+    <div class="section-tag">Портфолио</div>
+    <h2 class="section-title">Мои <span class="accent">работы</span></h2>
+    <p class="section-sub">Нажмите на фото, чтобы открыть их в полном размере</p>
+
+    <div class="gallery-grid">
+      <div class="gallery-item" onclick="openPhotoGallery(0)">
+        <img src="https://sun9-61.userapi.com/s/v1/ig2/VRAk0sKT5tvf5PzpzRlkY8CvzRU5eewfNPuVUWN6ODp5cCvgMZDzz9_M3-rckchfdLdwgYRzOv7e_uV5ANgneVbC.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,1080x1610,1280x1908,1440x2146,1696x2528&from=bu&cs=1696x0" alt="Работа 1" />
+      </div>
+      <div class="gallery-item" onclick="openPhotoGallery(1)">
+        <img src="https://sun9-31.userapi.com/s/v1/ig2/3HcZew5lNPrpC9mdzDV1srK8aC8TzT6LPOQQiJ5nkuBQdBFQa_6BnN4uNl__6QphfXLdvSBezkVdOHGN-3sIdtLW.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,1080x1610,1280x1908,1440x2146,1696x2528&from=bu&cs=1696x0" alt="Работа 2" />
+      </div>
+      <div class="gallery-item" onclick="openPhotoGallery(2)">
+        <img src="https://sun9-27.userapi.com/s/v1/ig2/7fBG9lpyBuEPootA8XZYtCgxLEsB6IrHJJ6Z0Xyr1gIcTB2-fK5sF2dU2HeBQ4xJeU2nuqrWIdsBb69sCCv3IERx.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,848x1264&from=bu&cs=848x0" alt="Работа 3" />
+      </div>
+      <div class="gallery-item" onclick="openPhotoGallery(3)">
+        <img src="https://sun9-82.userapi.com/s/v1/ig2/FfWTWXTM_oxE-D1U-JRiul_K6HUv3u8C3gApIdk9k0Sc1NXNh40Wve7Cvf1H-yPCug6pwzyUK9OXkTylnWo9UZiK.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,848x1264&from=bu&cs=848x0" alt="Работа 4" />
+      </div>
+      <div class="gallery-item" onclick="openPhotoGallery(4)">
+        <img src="https://sun9-44.userapi.com/s/v1/ig2/HFR_Tm5yH1F2IdBJPE8ZTxtLOcBFOKUc2al1DJRu_3r2Sw4PMKqu2WODiq55QyNEwEiPMkoSZz84gEmJj9uLmIo1.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,848x1264&from=bu&cs=848x0" alt="Работа 5" />
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:50px">
+      <button class="btn" onclick="openPhotoGallery(0)">Открыть все фото</button>
+    </div>
+  </div>
+</section>
+
+<section class="reviews" id="reviews">
+  <div class="container">
+    <div class="section-tag">Отзывы</div>
+    <h2 class="section-title">Что говорят <span class="accent">клиенты</span></h2>
+    <p class="section-sub">Несколько отзывов от тех, кто уже заказывал AI-обработку, реставрацию старых снимков, фотосессии без камеры и памятные видео</p>
+
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">Очень крутая обработка. Фотографии стали выглядеть красиво и необычно. Всё было сделано быстро и аккуратно.</div>
+        <div class="review-author">
+          <img class="review-avatar" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Клиент" />
+          <div>
+            <div class="review-name">Анна</div>
+            <div class="review-role">Клиент</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">Очень трогательная и бережная работа. Видео получилось светлым, красивым и действительно помогло сохранить память о близком человеке.</div>
+        <div class="review-author">
+          <img class="review-avatar" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Клиент" />
+          <div>
+            <div class="review-name">Дмитрий</div>
+            <div class="review-role">Клиент</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">Спасибо за деликатный подход и красивое исполнение. Всё сделано очень аккуратно, с душой и уважением.</div>
+        <div class="review-author">
+          <img class="review-avatar" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Клиент" />
+          <div>
+            <div class="review-name">Екатерина</div>
+            <div class="review-role">Клиент</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <div class="section-tag">Заказ</div>
+    <h2 class="section-title">Если вам важно сохранить <span class="accent">светлую память</span></h2>
+    <p>Напишите мне удобным способом. Вы сможете отправить фотографию, старый снимок или обсудить фотосессию без камеры, а также создание бережного видеоролика прощания с близким человеком.</p>
+    <button class="btn" onclick="openModal()">Связаться со мной</button>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>EVGENIY AI</h4>
+        <p>Нейрообработка фото, реставрация старых фотографий, фотосессии без камеры, художественные образы и создание бережных видеороликов прощания по фотографии близкого человека.</p>
+        <div class="socials">
+          <a class="social-link" href="https://max.ru/u/f9LHodD0cOL4HiT7Gru_mDnGiZ0B7mst7NlZ_nswoc__U4uBwidHZMT9zO8" target="_blank" rel="noopener noreferrer">MAX</a>
+          <a class="social-link" href="https://vk.com/id554120988" target="_blank" rel="noopener noreferrer">VK</a>
+          <a class="social-link" href="https://ok.ru/profile/584781508838" target="_blank" rel="noopener noreferrer">OK</a>
+        </div>
+      </div>
+
+      <div>
+        <h4>Навигация</h4>
+        <a href="#hero">Главная</a>
+        <a href="#compare-section">До / После</a>
+        <a href="#services">Услуги</a>
+        <a href="#video-section">Видеопрощание</a>
+        <a href="#restoration">Реставрация</a>
+        <a href="#virtual-session">Фотосессия без камеры</a>
+        <a href="#gallery">Работы</a>
+        <a href="#reviews">Отзывы</a>
+      </div>
+
+      <div>
+        <h4>Связь</h4>
+        <a onclick="openModal()">Заказать</a>
+        <a onclick="openModal()">Связаться со мной</a>
+        <a href="mailto:filyakovae@mail.ru">filyakovae@mail.ru</a>
+        <a href="https://vk.com/id554120988" target="_blank" rel="noopener noreferrer">ВКонтакте</a>
+        <a href="https://ok.ru/profile/584781508838" target="_blank" rel="noopener noreferrer">Одноклассники</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © 2026 Evgeniy AI Studio. Все права защищены.
+    </div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="contactModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-icon">✦</div>
+    <h3>Связаться со мной</h3>
+    <p>Выберите удобный способ для заказа</p>
+
+    <div class="contact-links">
+      <a class="contact-link contact-max" href="https://max.ru/u/f9LHodD0cOL4HiT7Gru_mDnGiZ0B7mst7NlZ_nswoc__U4uBwidHZMT9zO8" target="_blank" rel="noopener noreferrer">
+        <div class="ico">MAX</div>
+        <div class="info">
+          <span class="title">MAX</span>
+          <span class="sub">Написать в MAX</span>
+        </div>
+      </a>
+
+      <a class="contact-link contact-vk" href="https://vk.com/id554120988" target="_blank" rel="noopener noreferrer">
+        <div class="ico">VK</div>
+        <div class="info">
+          <span class="title">ВКонтакте</span>
+          <span class="sub">Написать в VK</span>
+        </div>
+      </a>
+
+      <a class="contact-link contact-ok" href="https://ok.ru/profile/584781508838" target="_blank" rel="noopener noreferrer">
+        <div class="ico">OK</div>
+        <div class="info">
+          <span class="title">Одноклассники</span>
+          <span class="sub">Написать в OK</span>
+        </div>
+      </a>
+
+      <a class="contact-link contact-mail" href="mailto:filyakovae@mail.ru">
+        <div class="ico">MAIL</div>
+        <div class="info">
+          <span class="title">Электронная почта</span>
+          <span class="sub">filyakovae@mail.ru</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox-overlay" id="photoLightbox">
+  <div class="lightbox-content">
+    <button class="lightbox-close" onclick="closePhotoGallery()">×</button>
+    <button class="lightbox-prev" onclick="prevPhoto()">‹</button>
+    <button class="lightbox-next" onclick="nextPhoto()">›</button>
+    <div class="lightbox-image-wrap">
+      <img class="lightbox-image" id="lightboxImage" src="" alt="Фото" />
+    </div>
+    <div class="lightbox-thumbs" id="lightboxThumbs"></div>
+  </div>
+</div>
+
+<div class="lightbox-overlay" id="restorationLightbox">
+  <div class="lightbox-content">
+    <button class="lightbox-close" onclick="closeRestorationGallery()">×</button>
+    <button class="lightbox-prev" onclick="prevRestorationPhoto()">‹</button>
+    <button class="lightbox-next" onclick="nextRestorationPhoto()">›</button>
+    <div class="lightbox-image-wrap">
+      <img class="lightbox-image" id="restorationLightboxImage" src="" alt="Реставрация" />
+    </div>
+    <div class="lightbox-thumbs" id="restorationLightboxThumbs"></div>
+  </div>
+</div>
+
+<div class="lightbox-overlay" id="virtualSessionLightbox">
+  <div class="lightbox-content">
+    <button class="lightbox-close" onclick="closeVirtualSessionGallery()">×</button>
+    <button class="lightbox-prev" onclick="prevVirtualSessionPhoto()">‹</button>
+    <button class="lightbox-next" onclick="nextVirtualSessionPhoto()">›</button>
+    <div class="lightbox-image-wrap">
+      <img class="lightbox-image" id="virtualSessionLightboxImage" src="" alt="Фотосессия без камеры" />
+    </div>
+    <div class="lightbox-thumbs" id="virtualSessionLightboxThumbs"></div>
+  </div>
+</div>
+
+<script type="text/javascript" src="https://vk.com/js/api/openapi.js?173"></script>
+
+<script>
+  const compare = document.getElementById('compare');
+  const afterImg = compare.querySelector('.img-after');
+  const line = compare.querySelector('.slider-line');
+  const handle = compare.querySelector('.slider-handle');
+
+  function setCompare(position){
+    const rect = compare.getBoundingClientRect();
+    let x = position - rect.left;
+    if(x < 0) x = 0;
+    if(x > rect.width) x = rect.width;
+    const percent = (x / rect.width) * 100;
+    afterImg.style.clipPath = `inset(0 0 0 ${percent}%)`;
+    line.style.left = percent + '%';
+    handle.style.left = percent + '%';
+  }
+
+  let isDragging = false;
+
+  compare.addEventListener('mousedown', function(e){
+    isDragging = true;
+    setCompare(e.clientX);
+  });
+
+  window.addEventListener('mousemove', function(e){
+    if(isDragging) setCompare(e.clientX);
+  });
+
+  window.addEventListener('mouseup', function(){
+    isDragging = false;
+  });
+
+  compare.addEventListener('touchstart', function(e){
+    setCompare(e.touches[0].clientX);
+  });
+
+  compare.addEventListener('touchmove', function(e){
+    setCompare(e.touches[0].clientX);
+  });
+
+  function loadCompare(button, beforeSrc, afterSrc){
+    compare.querySelector('.img-before').src = beforeSrc;
+    compare.querySelector('.img-after').src = afterSrc;
+    document.querySelectorAll('.compare-btn').forEach(function(btn){
+      btn.classList.remove('active');
+    });
+    button.classList.add('active');
+  }
+
+  function openModal(){
+    document.getElementById('contactModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(){
+    document.getElementById('contactModal').classList.remove('active');
+    if(
+      !document.getElementById('photoLightbox').classList.contains('active') &&
+      !document.getElementById('restorationLightbox').classList.contains('active') &&
+      !document.getElementById('virtualSessionLightbox').classList.contains('active')
+    ){
+      document.body.style.overflow = '';
+    }
+  }
+
+  document.getElementById('contactModal').addEventListener('click', function(e){
+    if(e.target === this){
+      closeModal();
+    }
+  });
+
+  const photoGallery = [
+    "https://sun9-61.userapi.com/s/v1/ig2/VRAk0sKT5tvf5PzpzRlkY8CvzRU5eewfNPuVUWN6ODp5cCvgMZDzz9_M3-rckchfdLdwgYRzOv7e_uV5ANgneVbC.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,1080x1610,1280x1908,1440x2146,1696x2528&from=bu&cs=1696x0",
+    "https://sun9-31.userapi.com/s/v1/ig2/3HcZew5lNPrpC9mdzDV1srK8aC8TzT6LPOQQiJ5nkuBQdBFQa_6BnN4uNl__6QphfXLdvSBezkVdOHGN-3sIdtLW.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,1080x1610,1280x1908,1440x2146,1696x2528&from=bu&cs=1696x0",
+    "https://sun9-27.userapi.com/s/v1/ig2/7fBG9lpyBuEPootA8XZYtCgxLEsB6IrHJJ6Z0Xyr1gIcTB2-fK5sF2dU2HeBQ4xJeU2nuqrWIdsBb69sCCv3IERx.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,848x1264&from=bu&cs=848x0",
+    "https://sun9-82.userapi.com/s/v1/ig2/FfWTWXTM_oxE-D1U-JRiul_K6HUv3u8C3gApIdk9k0Sc1NXNh40Wve7Cvf1H-yPCug6pwzyUK9OXkTylnWo9UZiK.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,848x1264&from=bu&cs=848x0",
+    "https://sun9-44.userapi.com/s/v1/ig2/HFR_Tm5yH1F2IdBJPE8ZTxtLOcBFOKUc2al1DJRu_3r2Sw4PMKqu2WODiq55QyNEwEiPMkoSZz84gEmJj9uLmIo1.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x537,480x715,540x805,640x954,720x1073,848x1264&from=bu&cs=848x0"
+  ];
+
+  let currentPhotoIndex = 0;
+
+  function renderThumbs(){
+    const thumbs = document.getElementById('lightboxThumbs');
+    thumbs.innerHTML = '';
+
+    photoGallery.forEach(function(src, index){
+      const item = document.createElement('div');
+      item.className = 'lightbox-thumb' + (index === currentPhotoIndex ? ' active' : '');
+      item.innerHTML = `<img src="${src}" alt="Превью ${index + 1}">`;
+      item.onclick = function(){
+        openPhotoGallery(index);
+      };
+      thumbs.appendChild(item);
+    });
+  }
+
+  function openPhotoGallery(index){
+    currentPhotoIndex = index;
+    document.getElementById('lightboxImage').src = photoGallery[currentPhotoIndex];
+    document.getElementById('photoLightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderThumbs();
+  }
+
+  function closePhotoGallery(){
+    document.getElementById('photoLightbox').classList.remove('active');
+    if(
+      !document.getElementById('contactModal').classList.contains('active') &&
+      !document.getElementById('restorationLightbox').classList.contains('active') &&
+      !document.getElementById('virtualSessionLightbox').classList.contains('active')
+    ){
+      document.body.style.overflow = '';
+    }
+  }
+
+  function nextPhoto(){
+    currentPhotoIndex = (currentPhotoIndex + 1) % photoGallery.length;
+    document.getElementById('lightboxImage').src = photoGallery[currentPhotoIndex];
+    renderThumbs();
+  }
+
+  function prevPhoto(){
+    currentPhotoIndex = (currentPhotoIndex - 1 + photoGallery.length) % photoGallery.length;
+    document.getElementById('lightboxImage').src = photoGallery[currentPhotoIndex];
+    renderThumbs();
+  }
+
+  document.getElementById('photoLightbox').addEventListener('click', function(e){
+    if(e.target === this){
+      closePhotoGallery();
+    }
+  });
+
+  const restorationGallery = [
+    "https://sun9-21.userapi.com/s/v1/ig2/5BsOckwVCVDjR9MnSWoWJp2IVXLrYFFwObHX32sh7HuFGrjLnyytOmjZEY6Ed2TgipLzlUth-yggGP4_GdBrXeev.jpg?quality=95&as=32x18,48x27,72x40,108x60,160x89,240x134,360x201,480x268,540x301,640x357,720x402,1080x603,1280x714,1376x768&from=bu&cs=1376x0",
+    "https://sun9-49.userapi.com/s/v1/ig2/doYIkGBBtkZXj4xsVF6Uagxf3sTtvAl18IThNAJjvTwaXGplfFaDB1ibkBhft4brlO7YcTDKt6iGBYGUP1njap15.jpg?quality=95&as=32x21,48x31,72x47,108x70,160x104,240x156,360x234,480x312,540x351,640x416,720x468,1080x702,1280x832,1440x936,2429x1579&from=bu&cs=2429x0",
+    "https://sun9-19.userapi.com/s/v1/ig2/ehz_lDBV8wyrj8B3I6lCUPG_KiS94VNZtSv-5-olNjdrpvuBCqABe6zuOUjFW-b76u8u4cAR1xv3EEKidcKNkPnH.jpg?quality=95&as=32x23,48x34,72x51,108x76,160x113,240x169,360x254,480x339,540x381,640x451,720x508,1080x762,1280x903,1440x1016,2382x1680&from=bu&cs=2382x0",
+    "https://sun9-22.userapi.com/s/v1/ig2/nHY7rgzAkwZ5QanMwrlZtW_0YmrHSl_O1-Ock1cuTNWoO-LA_FEH6yl5_TcF7gEOeUshZLDdDFVKOXFMd4ejVtoD.jpg?quality=95&as=32x21,48x32,72x48,108x72,160x106,240x159,360x238,480x318,540x358,640x424,720x477,1080x715,1280x848,1440x954,2512x1664&from=bu&cs=2512x0",
+    "https://sun9-62.userapi.com/s/v1/ig2/EwNs-LNxSIeYHgt5CFBVtT9XOObDuAK_1hlqwcc_ufovA1U2jbcsiY26Xwvw-niN838ylsUSsZnm3_yn9r-SufxX.jpg?quality=95&as=32x22,48x33,72x50,108x75,160x110,240x166,360x248,480x331,540x373,640x442,720x497,1080x745,1280x883,1440x994,2458x1696&from=bu&cs=2458x0",
+    "https://sun9-45.userapi.com/s/v1/ig2/kFMnTgVwqMzHt-Z4sgVWuOwx4Rl79rt-X-Yi1d_KjXq_Zrkbe4624uP1jnpxJwaDxZRutNsYRop1IxKyzzHNE8Gx.jpg?quality=95&as=32x22,48x34,72x50,108x76,160x112,240x168,360x252,480x336,540x378,640x448,720x504,1080x756,1280x896,1440x1008,2446x1712&from=bu&cs=2446x0",
+    "https://sun9-51.userapi.com/s/v1/ig2/X-N3f9zjkOtK-Z5d_57exUtA3-_mXOZL8bs77ktb6BLpOUxcxJd_70B_O-paCxRj8QPSY1TYAKKRTECXCfOff0PA.jpg?quality=95&as=32x21,48x31,72x47,108x70,160x104,240x156,360x235,480x313,540x352,640x417,720x469,1080x704,1280x834,1440x939,2528x1648&from=bu&cs=2528x0",
+    "https://sun9-49.userapi.com/s/v1/ig2/ytQI0G9FDl3LFXF80eXExh7Fm3KgpgJ3vzRIKPV0pThUTm6F1SlnnsjVcn3fJ_AjAunBSWu69Ck8okZLeDomqBPU.jpg?quality=95&as=32x19,48x29,72x44,108x66,160x97,240x146,360x218,480x291,540x328,640x388,720x437,1080x655,1280x776,1440x874,2560x1553&from=bu&cs=2560x0",
+    "https://sun9-65.userapi.com/s/v1/ig2/XaYmYsWNyIHVmhsl5XwhZIWqrKF5ZeCqEBxh4Un16NAGLQganD0GjkjnsG-5tEtEm5kItuzTZSLp2C7V1hzZy5ku.jpg?quality=95&as=32x21,48x32,72x48,108x72,160x107,240x161,360x241,480x322,540x362,640x429,720x482,1080x723,1280x857,1440x965,2496x1672&from=bu&cs=2496x0",
+    "https://sun9-81.userapi.com/s/v1/ig2/BWpwsh8xoc3LsGsmT0Y_nE94fTRfKSi_KGZt1X42MCHBCVwt_1aonLer0neFmHy1u-i139F6pAcCwX7rkEvqCH7-.jpg?quality=95&as=32x16,48x24,72x36,108x55,160x81,240x121,360x182,480x243,540x273,640x324,720x364,1080x546,1280x647,1440x728,2560x1295&from=bu&cs=2560x0",
+    "https://sun9-46.userapi.com/s/v1/ig2/KaOmvY3RcPNPdSOzPWGAAEiJj1QSZ1ml8dKTdgISbpBh5s2NatM-SEqQBclBaD3JSwfXbCk7Y60m0D-ZJg4-MaHs.jpg?quality=95&as=32x22,48x34,72x50,108x76,160x112,240x168,360x252,480x336,540x378,640x448,720x504,1080x755,1280x895,1440x1007,2448x1712&from=bu&cs=2448x0"
+  ];
+
+  let currentRestorationIndex = 0;
+
+  function renderRestorationThumbs(){
+    const thumbs = document.getElementById('restorationLightboxThumbs');
+    thumbs.innerHTML = '';
+
+    restorationGallery.forEach(function(src, index){
+      const item = document.createElement('div');
+      item.className = 'lightbox-thumb' + (index === currentRestorationIndex ? ' active' : '');
+      item.innerHTML = `<img src="${src}" alt="Реставрация ${index + 1}">`;
+      item.onclick = function(){
+        openRestorationGallery(index);
+      };
+      thumbs.appendChild(item);
+    });
+  }
+
+  function openRestorationGallery(index){
+    currentRestorationIndex = index;
+    document.getElementById('restorationLightboxImage').src = restorationGallery[currentRestorationIndex];
+    document.getElementById('restorationLightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderRestorationThumbs();
+  }
+
+  function closeRestorationGallery(){
+    document.getElementById('restorationLightbox').classList.remove('active');
+    if(
+      !document.getElementById('contactModal').classList.contains('active') &&
+      !document.getElementById('photoLightbox').classList.contains('active') &&
+      !document.getElementById('virtualSessionLightbox').classList.contains('active')
+    ){
+      document.body.style.overflow = '';
+    }
+  }
+
+  function nextRestorationPhoto(){
+    currentRestorationIndex = (currentRestorationIndex + 1) % restorationGallery.length;
+    document.getElementById('restorationLightboxImage').src = restorationGallery[currentRestorationIndex];
+    renderRestorationThumbs();
+  }
+
+  function prevRestorationPhoto(){
+    currentRestorationIndex = (currentRestorationIndex - 1 + restorationGallery.length) % restorationGallery.length;
+    document.getElementById('restorationLightboxImage').src = restorationGallery[currentRestorationIndex];
+    renderRestorationThumbs();
+  }
+
+  document.getElementById('restorationLightbox').addEventListener('click', function(e){
+    if(e.target === this){
+      closeRestorationGallery();
+    }
+  });
+
+  const virtualSessionGallery = [
+    "https://sun9-19.userapi.com/s/v1/ig2/IojbubouVb1sXhrTl4MTD7EuKYzp91TeCNIdFq8jm_aTXHpFMJBhk02Ozbf95iazc_gZSjPD_b-4IGBQCAHwCUC9.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0",
+    "https://sun9-74.userapi.com/s/v1/ig2/B42T5I8YigNOC5feBTVUBFDMHqs_wOms6wZRgZgfAwCMNevIFspbPHAo-1ayPaJveeQlv4W8wgCy7pyBFcbbRMlj.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0",
+    "https://sun9-66.userapi.com/s/v1/ig2/O-O2M9rnXoE7lxZFDqOd-VbAqj0cIKvuAIV-4Jfp6KP-g50B2Dv09GuTRBAwxiL4DV6nOQH7VgZR2yljPyglSBxq.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0",
+    "https://sun9-39.userapi.com/s/v1/ig2/NUdXoSE88_dXqwrCCaL10FdxUYCd5_cZXpUyFBOxwBNtInJLYAIBGASAyHawZACToJtERu4BqnbVONijcCrHWRva.jpg?quality=95&crop=0,0,1280,950&as=32x24,48x36,72x53,108x80,160x119,240x178,360x267,480x356,540x401,640x475,720x534,1080x802,1280x950&from=bu&cs=1280x0",
+    "https://sun9-58.userapi.com/s/v1/ig2/wvw4m_JOcvqTre1nLvgp5xL4B-SzwFZvS_NbdGvYiyeabnZ9lWon2WyWyycblItIVu_YdIk5aUZhv1LRDU-svvJJ.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0",
+    "https://sun9-10.userapi.com/s/v1/ig2/2A3WkBdHE7PFAXpORfDF6JJ6qw6uMOXevgPdGYvSbs50YloWOf9QhpTrKN20oPeRoVJGDrUA_AwYHzPfULlcPDMo.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0",
+    "https://sun9-82.userapi.com/s/v1/ig2/PTk4_kme-maweVs5G04p_8iB7vkjGhpbkqsy_Wzx1E6tI8_nuFEMVdZo4XXA7PTpc6p8NX83x3W7yUqhikHpnAjE.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0",
+    "https://sun9-79.userapi.com/s/v1/ig2/tCIa8AIqtx28621ptm00t_0Xkf9iOuKo4nMNvHCviRa_bO4dCQQRtJV-JyB0CkqvCs3gVg7cMtootu10wYUW7Ws1.jpg?quality=95&crop=0,0,1280,719&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x303,640x359,720x404,1080x607,1280x719&from=bu&cs=1280x0"
+  ];
+
+  let currentVirtualSessionIndex = 0;
+
+  function renderVirtualSessionThumbs(){
+    const thumbs = document.getElementById('virtualSessionLightboxThumbs');
+    thumbs.innerHTML = '';
+
+    virtualSessionGallery.forEach(function(src, index){
+      const item = document.createElement('div');
+      item.className = 'lightbox-thumb' + (index === currentVirtualSessionIndex ? ' active' : '');
+      item.innerHTML = `<img src="${src}" alt="Фотосессия ${index + 1}">`;
+      item.onclick = function(){
+        openVirtualSessionGallery(index);
+      };
+      thumbs.appendChild(item);
+    });
+  }
+
+  function openVirtualSessionGallery(index){
+    currentVirtualSessionIndex = index;
+    document.getElementById('virtualSessionLightboxImage').src = virtualSessionGallery[currentVirtualSessionIndex];
+    document.getElementById('virtualSessionLightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderVirtualSessionThumbs();
+  }
+
+  function closeVirtualSessionGallery(){
+    document.getElementById('virtualSessionLightbox').classList.remove('active');
+    if(
+      !document.getElementById('contactModal').classList.contains('active') &&
+      !document.getElementById('photoLightbox').classList.contains('active') &&
+      !document.getElementById('restorationLightbox').classList.contains('active')
+    ){
+      document.body.style.overflow = '';
+    }
+  }
+
+  function nextVirtualSessionPhoto(){
+    currentVirtualSessionIndex = (currentVirtualSessionIndex + 1) % virtualSessionGallery.length;
+    document.getElementById('virtualSessionLightboxImage').src = virtualSessionGallery[currentVirtualSessionIndex];
+    renderVirtualSessionThumbs();
+  }
+
+  function prevVirtualSessionPhoto(){
+    currentVirtualSessionIndex = (currentVirtualSessionIndex - 1 + virtualSessionGallery.length) % virtualSessionGallery.length;
+    document.getElementById('virtualSessionLightboxImage').src = virtualSessionGallery[currentVirtualSessionIndex];
+    renderVirtualSessionThumbs();
+  }
+
+  document.getElementById('virtualSessionLightbox').addEventListener('click', function(e){
+    if(e.target === this){
+      closeVirtualSessionGallery();
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      closeModal();
+      closePhotoGallery();
+      closeRestorationGallery();
+      closeVirtualSessionGallery();
+    }
+
+    if(document.getElementById('photoLightbox').classList.contains('active')){
+      if(e.key === 'ArrowRight') nextPhoto();
+      if(e.key === 'ArrowLeft') prevPhoto();
+    }
+
+    if(document.getElementById('restorationLightbox').classList.contains('active')){
+      if(e.key === 'ArrowRight') nextRestorationPhoto();
+      if(e.key === 'ArrowLeft') prevRestorationPhoto();
+    }
+
+    if(document.getElementById('virtualSessionLightbox').classList.contains('active')){
+      if(e.key === 'ArrowRight') nextVirtualSessionPhoto();
+      if(e.key === 'ArrowLeft') prevVirtualSessionPhoto();
+    }
+  });
+
+  (function() {
+    function initVkWidget(){
+      if (window.VK && VK.Widgets) {
+        try {
+          VK.Widgets.Post("vk_post_554120988_3169", 554120988, 3169, "VBOLI-J1MOHSAQ4qG7wN7vP-4201");
+        } catch(e) {
+          console.log("VK widget init error:", e);
+        }
+      } else {
+        setTimeout(initVkWidget, 500);
+      }
+    }
+    initVkWidget();
+  }());
+</script>
+
+</body>
+</html>
